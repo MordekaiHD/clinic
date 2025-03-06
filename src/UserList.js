@@ -1,20 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
 import ModalOpen from './ModalOpen';
 
 const UserList = () => {
   const [users, setUsers] = useState([]);
-  const [filteredUsers, setFilteredUsers] = useState([]); // Для фильтрации
-  const [sortedUsers, setSortedUsers] = useState([]); // Для сортировки
   const [inputValue, setInputValue] = useState('');
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [addedUsers, setAddedUsers] = useState([]);
+  const [userToDelete, setUserToDelete] = useState(null);
 
-
-  // Загрузка пользователей
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -22,32 +19,48 @@ const UserList = () => {
         const newUsers = response.data.data.map(user => ({
           ...user,
           gender: Math.random() > 0.5 ? 'Male' : 'Female',
-          birthDate: new Date(1990 + Math.floor(Math.random() * 20)),
+          birthDate: new Date(1990 + Math.floor(Math.random() * 20)), // Создаем объект Date
         }));
         setUsers(newUsers);
-        setFilteredUsers(newUsers);
-        setSortedUsers(newUsers);
+        localStorage.setItem('users', JSON.stringify(newUsers)); // Сохраняем в localStorage
       } catch (error) {
         console.error('Ошибка при загрузке данных:', error);
       }
     };
 
-    fetchUsers();
+    const localUsers = JSON.parse(localStorage.getItem('users'));
+    if (localUsers) {
+      // Преобразуем birthDate обратно в объект Date
+      const usersWithCorrectDates = localUsers.map(user => ({
+        ...user,
+        birthDate: new Date(user.birthDate), // Преобразуем строку в объект Date
+      }));
+      setUsers(usersWithCorrectDates);
+    } else {
+      fetchUsers();
+    }
   }, []);
 
-
-  // Поиск по фамилии
-  const handleSearch = (event) => {
-    const value = event.target.value;
-    setInputValue(value);
-    const filtered = users.filter(user =>
-      user.last_name.toLowerCase().includes(value.toLowerCase())
+  const filteredUsers = useMemo(() => {
+    return users.filter(user =>
+      user.last_name.toLowerCase().includes(inputValue.toLowerCase())
     );
-    setFilteredUsers(filtered);
-    setIsDropdownVisible(value.length > 0); // Показываем выпадающий список при вводе
+  }, [users, inputValue]);
+
+  const sortedUsers = useMemo(() => {
+    if (!sortConfig.key) return filteredUsers;
+    return [...filteredUsers].sort((a, b) => {
+      if (a[sortConfig.key] < b[sortConfig.key]) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (a[sortConfig.key] > b[sortConfig.key]) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [filteredUsers, sortConfig]);
+
+  const handleSearch = (event) => {
+    setInputValue(event.target.value);
+    setIsDropdownVisible(event.target.value.length > 0);
   };
 
-  // Выбор пользователя из списка
   const handleUserSelect = (user) => {
     if (!addedUsers.some((addedUser) => addedUser.id === user.id)) {
       setAddedUsers([...addedUsers, user]);
@@ -56,69 +69,63 @@ const UserList = () => {
     }
   };
 
-  // Проверка на точное совпадение
   const hasExactMatch = filteredUsers.some(
     (user) => user.last_name.toLowerCase() === inputValue.toLowerCase()
   );
 
-  // Добавление нового пользователя
   const handleAddUserClick = () => {
     setIsModalOpen(true);
+    const [last_name, first_name] = inputValue.split(' ');
+    setEditingUser({
+      last_name: last_name || '',
+      first_name: first_name || '',
+    });
+    setInputValue('');
   };
 
-  // Сортировка
   const requestSort = (key) => {
     let direction = 'asc';
     if (sortConfig.key === key && sortConfig.direction === 'asc') {
       direction = 'desc';
     }
     setSortConfig({ key, direction });
-
-    const sorted = [...filteredUsers].sort((a, b) => {
-      if (a[key] < b[key]) return direction === 'asc' ? -1 : 1;
-      if (a[key] > b[key]) return direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-    setSortedUsers(sorted); // Обновляем sortedUsers
   };
 
-  // Удаление пользователя
   const handleDelete = async (id) => {
+    setUserToDelete(id);
+  };
+
+  const confirmDelete = async () => {
     try {
-      await axios.delete(`https://reqres.in/api/users/${id}`);
-      setUsers(users.filter(user => user.id !== id));
-      setFilteredUsers(filteredUsers.filter(user => user.id !== id));
-      setSortedUsers(sortedUsers.filter(user => user.id !== id)); // Обновляем sortedUsers
+      await axios.delete(`https://reqres.in/api/users/${userToDelete}`);
+      const newUsers = users.filter(user => user.id !== userToDelete);
+      setUsers(newUsers);
+      localStorage.setItem('users', JSON.stringify(newUsers));
+      setUserToDelete(null);
     } catch (error) {
       console.error('Ошибка при удалении пользователя:', error);
     }
   };
 
-  // Редактирование пользователя
   const handleEdit = (user) => {
     setEditingUser(user);
     setIsModalOpen(true);
   };
 
-  // Сохранение изменений
   const handleSave = (updatedUser) => {
-    console.log('Получили пользователя:', updatedUser);
-
     let newUsers;
 
     if (!updatedUser.id) {
-      // Для нового пользователя
       const formattedBirthDate = new Date(updatedUser.birthDate);
       const newUser = {
         ...updatedUser,
         id: users.length + 1,
         avatar: 'https://via.placeholder.com/50',
+        email: updatedUser.email || 'default@example.com',
         birthDate: formattedBirthDate,
       };
-
-      newUsers = [newUser, ...users]; // Создаем новый массив
+      newUsers = [newUser, ...users];
     } else {
-      // Для существующего пользователя
       newUsers = users.map(user =>
         user.id === updatedUser.id
           ? { ...user, ...updatedUser, birthDate: new Date(updatedUser.birthDate) }
@@ -126,23 +133,8 @@ const UserList = () => {
       );
     }
 
-    setUsers(newUsers); // Устанавливаем новый массив
-
-    // Пересчитываем filteredUsers
-    const newFilteredUsers = newUsers.filter(user =>
-      user.last_name.toLowerCase().includes(inputValue.toLowerCase())
-    );
-    setFilteredUsers(newFilteredUsers);
-
-    // Пересчитываем sortedUsers
-    const newSortedUsers = [...newFilteredUsers].sort((a, b) => {
-      if (!sortConfig.key) return 0;
-      if (a[sortConfig.key] < b[sortConfig.key]) return sortConfig.direction === 'asc' ? -1 : 1;
-      if (a[sortConfig.key] > b[sortConfig.key]) return sortConfig.direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-    setSortedUsers(newSortedUsers);
-
+    setUsers(newUsers);
+    localStorage.setItem('users', JSON.stringify(newUsers));
     setIsModalOpen(false);
     setEditingUser(null);
   };
@@ -164,12 +156,10 @@ const UserList = () => {
           {filteredUsers.length > 0 ? (
             filteredUsers.map((user) => {
               const isAdded = addedUsers.some((addedUser) => addedUser.id === user.id);
-
-              // Подсветка совпадающих букв
               const highlightText = (text, query) => {
-                if (!query) return text; // Если нет запроса, возвращаем исходный текст
-                const regex = new RegExp(query, 'gi'); // Создаем регулярное выражение
-                return text.replace(regex, (match) => `<strong>${match}</strong>`); // Выделяем совпадения
+                if (!query) return text;
+                const regex = new RegExp(query, 'gi');
+                return text.replace(regex, (match) => `<strong>${match}</strong>`);
               };
 
               const highlightedLastName = highlightText(user.last_name, inputValue);
@@ -208,7 +198,7 @@ const UserList = () => {
           </tr>
         </thead>
         <tbody>
-          {sortedUsers.slice(0, 5).map(user => (
+          {sortedUsers.map(user => (
             <tr key={user.id}>
               <td>
                 <img src={user.avatar} alt={`${user.first_name} ${user.last_name}`} className="avatar" />
@@ -216,7 +206,7 @@ const UserList = () => {
               <td>{`${user.last_name} ${user.first_name[0]}.`}</td>
               <td>{user.email}</td>
               <td>{user.gender}</td>
-              <td>{user.birthDate.toLocaleDateString()}</td>
+              <td>{user.birthDate instanceof Date ? user.birthDate.toLocaleDateString() : ''}</td>
               <td>
                 <button onClick={() => handleEdit(user)} className="edit-button">
                   Редактировать
@@ -230,6 +220,16 @@ const UserList = () => {
         </tbody>
       </table>
 
+      {userToDelete && (
+        <div className="modal">
+          <div className="modal-content">
+            <p>Вы уверены, что хотите удалить этого пользователя?</p>
+            <button onClick={confirmDelete}>Да</button>
+            <button onClick={() => setUserToDelete(null)}>Нет</button>
+          </div>
+        </div>
+      )}
+
       {isModalOpen && (
         <ModalOpen
           user={editingUser}
@@ -242,4 +242,3 @@ const UserList = () => {
 };
 
 export default UserList;
-
