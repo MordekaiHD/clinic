@@ -19,10 +19,10 @@ const UserList = () => {
         const newUsers = response.data.data.map(user => ({
           ...user,
           gender: Math.random() > 0.5 ? 'Male' : 'Female',
-          birthDate: new Date(1990 + Math.floor(Math.random() * 20)), // Создаем объект Date
+          birthDate: new Date(1990 + Math.floor(Math.random() * 20)),
         }));
         setUsers(newUsers);
-        localStorage.setItem('users', JSON.stringify(newUsers)); // Сохраняем в localStorage
+        localStorage.setItem('users', JSON.stringify(newUsers));
       } catch (error) {
         console.error('Ошибка при загрузке данных:', error);
       }
@@ -30,10 +30,9 @@ const UserList = () => {
 
     const localUsers = JSON.parse(localStorage.getItem('users'));
     if (localUsers) {
-      // Преобразуем birthDate обратно в объект Date
       const usersWithCorrectDates = localUsers.map(user => ({
         ...user,
-        birthDate: new Date(user.birthDate), // Преобразуем строку в объект Date
+        birthDate: new Date(user.birthDate),
       }));
       setUsers(usersWithCorrectDates);
     } else {
@@ -50,9 +49,9 @@ const UserList = () => {
   const sortedUsers = useMemo(() => {
     if (!sortConfig.key) return filteredUsers;
     return [...filteredUsers].sort((a, b) => {
-      if (a[sortConfig.key] < b[sortConfig.key]) return sortConfig.direction === 'asc' ? -1 : 1;
-      if (a[sortConfig.key] > b[sortConfig.key]) return sortConfig.direction === 'asc' ? 1 : -1;
-      return 0;
+      return a[sortConfig.key] < b[sortConfig.key]
+        ? (sortConfig.direction === 'asc' ? -1 : 1)
+        : (sortConfig.direction === 'asc' ? 1 : -1);
     });
   }, [filteredUsers, sortConfig]);
 
@@ -62,7 +61,8 @@ const UserList = () => {
   };
 
   const handleUserSelect = (user) => {
-    if (!addedUsers.some((addedUser) => addedUser.id === user.id)) {
+    const addedUsersSet = new Set(addedUsers.map(u => u.id));
+    if (!addedUsersSet.has(user.id)) {
       setAddedUsers([...addedUsers, user]);
       setInputValue('');
       setIsDropdownVisible(false);
@@ -113,25 +113,19 @@ const UserList = () => {
   };
 
   const handleSave = (updatedUser) => {
-    let newUsers;
-
-    if (!updatedUser.id) {
-      const formattedBirthDate = new Date(updatedUser.birthDate);
-      const newUser = {
+    const newUsers = updatedUser.id
+      ? users.map(user =>
+        user.id === updatedUser.id
+          ? { ...user, ...updatedUser, birthDate: new Date(updatedUser.birthDate) }
+          : user
+      )
+      : [{
         ...updatedUser,
         id: users.length + 1,
         avatar: 'https://via.placeholder.com/50',
         email: updatedUser.email || 'default@example.com',
-        birthDate: formattedBirthDate,
-      };
-      newUsers = [newUser, ...users];
-    } else {
-      newUsers = users.map(user =>
-        user.id === updatedUser.id
-          ? { ...user, ...updatedUser, birthDate: new Date(updatedUser.birthDate) }
-          : user
-      );
-    }
+        birthDate: new Date(updatedUser.birthDate),
+      }, ...users];
 
     setUsers(newUsers);
     localStorage.setItem('users', JSON.stringify(newUsers));
@@ -155,7 +149,7 @@ const UserList = () => {
         <ul className="dropdown-list">
           {filteredUsers.length > 0 ? (
             filteredUsers.map((user) => {
-              const isAdded = addedUsers.some((addedUser) => addedUser.id === user.id);
+              const isAdded = addedUsers.some(addedUser => addedUser.id === user.id);
               const highlightText = (text, query) => {
                 if (!query) return text;
                 const regex = new RegExp(query, 'gi');

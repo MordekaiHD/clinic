@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 
 const ModalOpen = ({ user, onSave, onClose }) => {
-  const [formData, setFormData] = useState(user || {
-    first_name: user ? user.first_name : '', // Используем переданное имя
-    last_name: user ? user.last_name : '', // Используем переданную фамилию
-    email: '',
-    gender: '',
-    birthDate: '',
-    role: '',
+  const [formData, setFormData] = useState({
+    first_name: user?.first_name || '',
+    last_name: user?.last_name || '',
+    email: user?.email || '',
+    gender: user?.gender || '',
+    birthDate: user?.birthDate || '',
+    role: user?.role || '',
   });
 
   // Остальной код компонента ModalOpen остается без изменений
@@ -44,8 +44,6 @@ const ModalOpen = ({ user, onSave, onClose }) => {
     onSave(formData);
     console.log('Отправляем пользователя:', formData);
   };
-
-
 
   return (
     <div className="modal-overlay">
