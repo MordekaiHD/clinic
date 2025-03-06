@@ -16,6 +16,7 @@ const UserList = () => {
     const fetchUsers = async () => {
       try {
         const response = await axios.get('https://reqres.in/api/users?per_page=8&page=1');
+        console.log('API Response:', response.data); // Выводим данные из API
         const newUsers = response.data.data.map(user => ({
           ...user,
           gender: Math.random() > 0.5 ? 'Male' : 'Female',
@@ -28,16 +29,7 @@ const UserList = () => {
       }
     };
 
-    const localUsers = JSON.parse(localStorage.getItem('users'));
-    if (localUsers) {
-      const usersWithCorrectDates = localUsers.map(user => ({
-        ...user,
-        birthDate: new Date(user.birthDate),
-      }));
-      setUsers(usersWithCorrectDates);
-    } else {
-      fetchUsers();
-    }
+    fetchUsers();
   }, []);
 
   const filteredUsers = useMemo(() => {
@@ -81,6 +73,7 @@ const UserList = () => {
       first_name: first_name || '',
     });
     setInputValue('');
+    setIsDropdownVisible(false);
   };
 
   const requestSort = (key) => {
@@ -113,19 +106,26 @@ const UserList = () => {
   };
 
   const handleSave = (updatedUser) => {
-    const newUsers = updatedUser.id
-      ? users.map(user =>
+    let newUsers;
+
+    if (updatedUser.id) {
+      // Редактирование существующего пользователя
+      newUsers = users.map(user =>
         user.id === updatedUser.id
           ? { ...user, ...updatedUser, birthDate: new Date(updatedUser.birthDate) }
           : user
-      )
-      : [{
+      );
+    } else {
+      // Создание нового пользователя
+      const newUser = {
         ...updatedUser,
         id: users.length + 1,
         avatar: 'https://via.placeholder.com/50',
         email: updatedUser.email || 'default@example.com',
         birthDate: new Date(updatedUser.birthDate),
-      }, ...users];
+      };
+      newUsers = [newUser, ...users];
+    }
 
     setUsers(newUsers);
     localStorage.setItem('users', JSON.stringify(newUsers));

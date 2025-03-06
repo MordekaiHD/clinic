@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 
 const ModalOpen = ({ user, onSave, onClose }) => {
   const [formData, setFormData] = useState({
+    id: user?.id || null,
     first_name: user?.first_name || '',
     last_name: user?.last_name || '',
     email: user?.email || '',
     gender: user?.gender || '',
-    birthDate: user?.birthDate || '',
+    birthDate: user?.birthDate ? user.birthDate.toISOString().split('T')[0] : '',
     role: user?.role || '',
   });
 
@@ -42,8 +43,8 @@ const ModalOpen = ({ user, onSave, onClose }) => {
       return;
     }
     onSave(formData);
-    console.log('Отправляем пользователя:', formData);
   };
+
 
   return (
     <div className="modal-overlay">
