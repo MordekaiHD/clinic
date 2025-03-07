@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
 import ModalOpen from './ModalOpen';
+import UserCards from './UserCards';
+import Header from './Header';
 
 const UserList = () => {
   const [users, setUsers] = useState([]);
@@ -11,6 +13,20 @@ const UserList = () => {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [addedUsers, setAddedUsers] = useState([]);
   const [userToDelete, setUserToDelete] = useState(null);
+
+  // Эффект для отключения скроллинга при открытии модального окна
+  useEffect(() => {
+    if (isModalOpen) {
+      document.body.classList.add('no-scroll');
+    } else {
+      document.body.classList.remove('no-scroll');
+    }
+
+    // Очистка эффекта при размонтировании компонента
+    return () => {
+      document.body.classList.remove('no-scroll');
+    };
+  }, [isModalOpen]);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -67,11 +83,7 @@ const UserList = () => {
 
   const handleAddUserClick = () => {
     setIsModalOpen(true);
-    const [last_name, first_name] = inputValue.split(' ');
-    setEditingUser({
-      last_name: last_name || '',
-      first_name: first_name || '',
-    });
+    setEditingUser(null); // Передаем null для нового пользователя
     setInputValue('');
     setIsDropdownVisible(false);
   };
@@ -101,18 +113,33 @@ const UserList = () => {
   };
 
   const handleEdit = (user) => {
-    setEditingUser(user);
+    setEditingUser(user); // Передаем полный объект пользователя
     setIsModalOpen(true);
   };
 
   const handleSave = (updatedUser) => {
     let newUsers;
 
+    // Разделяем fullName на имя и фамилию
+    const [last_name, first_name] = updatedUser.fullName.trim().split(' ');
+
+    // Проверка, что fullName содержит и имя, и фамилию
+    if (!last_name || !first_name) {
+      alert('Пожалуйста, введите и имя, и фамилию.');
+      return;
+    }
+
     if (updatedUser.id) {
       // Редактирование существующего пользователя
       newUsers = users.map(user =>
         user.id === updatedUser.id
-          ? { ...user, ...updatedUser, birthDate: new Date(updatedUser.birthDate) }
+          ? {
+            ...user,
+            ...updatedUser,
+            last_name,
+            first_name,
+            birthDate: new Date(updatedUser.birthDate)
+          }
           : user
       );
     } else {
@@ -123,6 +150,8 @@ const UserList = () => {
         avatar: 'https://via.placeholder.com/50',
         email: updatedUser.email || 'default@example.com',
         birthDate: new Date(updatedUser.birthDate),
+        last_name,
+        first_name,
       };
       newUsers = [newUser, ...users];
     }
@@ -132,17 +161,30 @@ const UserList = () => {
     setIsModalOpen(false);
     setEditingUser(null);
   };
-
   return (
-    <div className="user-list-container">
-      <div>
+
+    <div className="main__list__container">
+      <Header handleAddUserClick={handleAddUserClick} />
+      <div className='main__list__container-input-box'>
         <input
+          className="main__list__container-input"
           type="text"
           value={inputValue}
           onChange={handleSearch}
-          placeholder="Поиск по фамилии"
-          className="user-input"
+          placeholder="Поиск..."
         />
+
+        <div className="main__list__container-sort-info">
+          <p className="main__list__container-sort-info-full-name">ФИО пользователя
+            <span className="main__list__container-sort-info-full-name-span">
+              По алфавиту А-Я <img className="main__list__container-sort-info-full-name-span-img" src="/Img/Arrow.svg" alt='Arrow' />
+            </span>
+          </p>
+          <p className="main__list__container-sort-info-contact-details">Контактные данные</p>
+          <p className="main__list__container-sort-info-date-of-birth">Дата рождения</p>
+          <p className="main__list__container-sort-info-gender">Пол</p>
+          <p className="main__list__container-sort-info-role">Роль</p>
+        </div>
       </div>
 
       {isDropdownVisible && (
@@ -180,39 +222,20 @@ const UserList = () => {
         </ul>
       )}
 
-      <table className="user-table">
-        <thead>
-          <tr>
-            <th>Аватар</th>
-            <th onClick={() => requestSort('last_name')}>Полное имя</th>
-            <th>Email</th>
-            <th onClick={() => requestSort('gender')}>Пол</th>
-            <th onClick={() => requestSort('birthDate')}>Дата рождения</th>
-            <th>Управление</th>
-          </tr>
-        </thead>
-        <tbody>
-          {sortedUsers.map(user => (
-            <tr key={user.id}>
-              <td>
-                <img src={user.avatar} alt={`${user.first_name} ${user.last_name}`} className="avatar" />
-              </td>
-              <td>{`${user.last_name} ${user.first_name[0]}.`}</td>
-              <td>{user.email}</td>
-              <td>{user.gender}</td>
-              <td>{user.birthDate instanceof Date ? user.birthDate.toLocaleDateString() : ''}</td>
-              <td>
-                <button onClick={() => handleEdit(user)} className="edit-button">
-                  Редактировать
-                </button>
-                <button onClick={() => handleDelete(user.id)} className="delete-button">
-                  Удалить
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <UserCards
+        sortedUsers={sortedUsers}
+        requestSort={requestSort}
+        handleEdit={handleEdit}
+        handleDelete={handleDelete}
+      />
+
+      {isModalOpen && (
+        <ModalOpen
+          user={editingUser}
+          onSave={handleSave}
+          onClose={() => setIsModalOpen(false)}
+        />
+      )}
 
       {userToDelete && (
         <div className="modal">
@@ -222,14 +245,6 @@ const UserList = () => {
             <button onClick={() => setUserToDelete(null)}>Нет</button>
           </div>
         </div>
-      )}
-
-      {isModalOpen && (
-        <ModalOpen
-          user={editingUser}
-          onSave={handleSave}
-          onClose={() => setIsModalOpen(false)}
-        />
       )}
     </div>
   );
