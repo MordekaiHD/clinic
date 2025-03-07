@@ -189,7 +189,7 @@ body {
 .modal-content-right-close {
   border: none;
   background-color: white;
-  margin: 0 0px 0 59vh;
+  margin: 0 0px 0 56vh;
 }
 
 .modal-content-right-info {
@@ -211,9 +211,13 @@ body {
 
 .modal-content-right-info-full-name-input {
   padding: 12px 14px 12px 40px;
+  background: rgb(242, 244, 247);
   border-radius: 16px;
   border: none;
-  background: rgb(242, 244, 247);
+  color: rgb(166, 172, 179);
+  font-family: "Montserrat";
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .modal-content-right-info-full-name-img {

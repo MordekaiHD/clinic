@@ -61,7 +61,7 @@ const ModalOpen = ({ user, onSave, onClose }) => {
               name="fullName"
               value={formData.fullName}
               onChange={handleChange}
-              placeholder="Имя и Фамилия"
+              placeholder="Пользователь"
             />
           </div>
           <div className="modal-content-right-info-box">
