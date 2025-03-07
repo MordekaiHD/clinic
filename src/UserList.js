@@ -14,6 +14,7 @@ const UserList = () => {
   const [addedUsers, setAddedUsers] = useState([]);
   const [userToDelete, setUserToDelete] = useState(null);
 
+
   // Эффект для отключения скроллинга при открытии модального окна
   useEffect(() => {
     if (isModalOpen) {
@@ -96,14 +97,14 @@ const UserList = () => {
     setSortConfig({ key, direction });
   };
 
-  const handleDelete = async (id) => {
-    setUserToDelete(id);
+  const handleDelete = (user) => {
+    setUserToDelete(user);
   };
 
   const confirmDelete = async () => {
     try {
-      await axios.delete(`https://reqres.in/api/users/${userToDelete}`);
-      const newUsers = users.filter(user => user.id !== userToDelete);
+      await axios.delete(`https://reqres.in/api/users/${userToDelete.id}`);
+      const newUsers = users.filter(user => user.id !== userToDelete.id);
       setUsers(newUsers);
       localStorage.setItem('users', JSON.stringify(newUsers));
       setUserToDelete(null);
@@ -166,6 +167,8 @@ const UserList = () => {
     <div className="main__list__container">
       <Header handleAddUserClick={handleAddUserClick} />
       <div className='main__list__container-input-box'>
+        <img className="main__list__container-input-img" src="/Img/loupe.svg" alt="loupe" />
+
         <input
           className="main__list__container-input"
           type="text"
@@ -185,46 +188,48 @@ const UserList = () => {
           <p className="main__list__container-sort-info-gender">Пол</p>
           <p className="main__list__container-sort-info-role">Роль</p>
         </div>
+
+        {isDropdownVisible && (
+          <ul className="main__list__container-dropdown-list">
+            {filteredUsers.length > 0 ? (
+              filteredUsers.map((user) => {
+                const isAdded = addedUsers.some(addedUser => addedUser.id === user.id);
+                const highlightText = (text, query) => {
+                  if (!query) return text;
+                  const regex = new RegExp(query, 'gi');
+                  return text.replace(regex, (match) => `<strong className="main__list__container-dropdown-list-strong">${match}</strong>`);
+                };
+
+                const highlightedLastName = highlightText(user.last_name, inputValue);
+
+                return (
+                  <li
+                    key={user.id}
+                    onClick={() => !isAdded && handleUserSelect(user)}
+                    className={`main__list__container-dropdown-item ${isAdded ? 'added' : ''}`}
+                    dangerouslySetInnerHTML={{ __html: `${highlightedLastName} ${user.first_name[0]}.` }}
+                  />
+                );
+              })
+            ) : (
+              <li className="no-user-found">
+                Пользователя с такими параметрами не найдено, проверьте правильность написания или создайте нового!
+              </li>
+            )}
+            {!hasExactMatch && inputValue.length > 0 && (
+              <button onClick={handleAddUserClick} className="main__list__container-button">
+                <img className="main__list__container-button-img" src="/Img/AddUser.svg" alt='AddUser' />
+                Добавить Пользователя
+              </button>
+            )}
+          </ul>
+        )}
       </div>
 
-      {isDropdownVisible && (
-        <ul className="dropdown-list">
-          {filteredUsers.length > 0 ? (
-            filteredUsers.map((user) => {
-              const isAdded = addedUsers.some(addedUser => addedUser.id === user.id);
-              const highlightText = (text, query) => {
-                if (!query) return text;
-                const regex = new RegExp(query, 'gi');
-                return text.replace(regex, (match) => `<strong>${match}</strong>`);
-              };
 
-              const highlightedLastName = highlightText(user.last_name, inputValue);
-
-              return (
-                <li
-                  key={user.id}
-                  onClick={() => !isAdded && handleUserSelect(user)}
-                  className={`dropdown-item ${isAdded ? 'added' : ''}`}
-                  dangerouslySetInnerHTML={{ __html: `${highlightedLastName} ${user.first_name[0]}.` }}
-                />
-              );
-            })
-          ) : (
-            <li className="no-user-found">
-              Пользователя с такими параметрами не найдено, проверьте правильность написания или создайте нового!
-            </li>
-          )}
-          {!hasExactMatch && inputValue.length > 0 && (
-            <button onClick={handleAddUserClick} className="add-user-button">
-              Добавить Пользователя
-            </button>
-          )}
-        </ul>
-      )}
 
       <UserCards
         sortedUsers={sortedUsers}
-        requestSort={requestSort}
         handleEdit={handleEdit}
         handleDelete={handleDelete}
       />
@@ -240,9 +245,13 @@ const UserList = () => {
       {userToDelete && (
         <div className="modal">
           <div className="modal-content">
-            <p>Вы уверены, что хотите удалить этого пользователя?</p>
-            <button onClick={confirmDelete}>Да</button>
-            <button onClick={() => setUserToDelete(null)}>Нет</button>
+            <img className="modal-conten-img" src="/Img/ImgDelete.svg" alt="ImgDelete" />
+            <p className='modal-content-text'>Вы хотите удалить пользователя:</p>
+            <p className='modal-content-user'>{`${userToDelete.last_name} ${userToDelete.first_name}`}</p>
+            <div className='modal-content-box'>
+              <button className='modal-content-box-button-left' onClick={confirmDelete}>Удалить</button>
+              <button className='modal-content-box-button-right' onClick={() => setUserToDelete(null)}>Отменить</button>
+            </div>
           </div>
         </div>
       )}

@@ -1,3 +1,4 @@
+@charset "UTF-8";
 * {
   margin: 0;
   padding: 0;
@@ -18,6 +19,7 @@ body {
   align-items: center;
   gap: 85vh;
   flex-wrap: wrap;
+  padding: 25px 30px 0 30px;
 }
 .header__title {
   font-size: 26px;
@@ -44,23 +46,59 @@ body {
   cursor: pointer;
 }
 
+.main__list__container-dropdown-list {
+  width: 98vw;
+  display: flex;
+  background-color: white;
+  position: absolute;
+  bottom: -124px;
+  border: 0.6px solid rgb(233, 237, 245);
+  border-radius: 16px;
+  box-shadow: 0px 10px 20px 0px rgba(66, 71, 77, 0.15);
+  flex-direction: column;
+}
+.main__list__container-dropdown-item {
+  font-family: "Montserrat";
+  font-size: 14px;
+  font-weight: 500;
+  padding: 12px 14px 12px 14px;
+  color: #828D99;
+}
+.main__list__container-button {
+  font-family: "Montserrat";
+  display: flex;
+  border: none;
+  gap: 10px;
+  border-bottom-left-radius: 15px;
+  border-bottom-right-radius: 15px;
+  padding: 12px 14px 12px 14px;
+  background: rgb(77, 162, 214);
+  color: white;
+}
 .main__list__container-input-box {
+  position: relative;
   padding: 10px 10px 0px 10px;
   display: flex;
   flex-direction: column;
   border-radius: 20px;
   background: rgb(255, 255, 255);
-  margin: 20px 0 0 0;
+  margin: 20px 30px 0 30px;
 }
 .main__list__container-input {
   height: 44px;
   border-radius: 16px;
   background: rgb(242, 244, 247);
-  color: rgb(166, 174, 179);
   font-family: "Montserrat";
   font-size: 14px;
   font-weight: 500;
   border: none;
+  padding: 0 0 0 35px;
+}
+.main__list__container-input-img {
+  position: absolute;
+  width: 16px;
+  top: 25px;
+  left: 20px;
 }
 .main__list__container-sort-info {
   display: flex;
@@ -95,7 +133,7 @@ body {
 .main__cards-container {
   display: flex;
   flex-direction: column;
-  margin: 20px 0 0 0;
+  margin: 20px 30px 0 30px;
 }
 .main__cards-container-card {
   display: flex;
@@ -162,6 +200,7 @@ body {
 .modal-overlay {
   position: absolute;
   top: 0;
+  left: 0;
   display: flex;
 }
 
@@ -214,7 +253,6 @@ body {
   background: rgb(242, 244, 247);
   border-radius: 16px;
   border: none;
-  color: rgb(166, 172, 179);
   font-family: "Montserrat";
   font-size: 14px;
   font-weight: 500;
@@ -263,7 +301,8 @@ body {
 }
 
 .roal {
-  width: 286.67px;
+  position: relative;
+  width: 237px;
   height: 44px;
   padding: 0px 8px 0px 14px;
   border: none;
@@ -276,13 +315,13 @@ body {
 }
 
 .birth__date {
+  position: relative;
   width: 250px;
   height: 44px;
   padding: 0px 8px 0px 45px;
   border-radius: 16px;
   border: none;
   background: rgb(242, 244, 247);
-  color: rgb(130, 141, 153);
   font-family: "Montserrat";
   font-size: 14px;
   font-weight: 500;
@@ -327,6 +366,141 @@ body {
 
 .modal-content-right-info-box-img {
   position: absolute;
-  left: 17px;
+  left: 20px;
   z-index: 1;
+  top: 12px;
+}
+
+.date-picker-container {
+  position: relative;
+}
+
+.role-select {
+  position: relative;
+}
+
+.error {
+  color: rgb(255, 74, 51);
+  background: rgb(255, 233, 230);
+}
+
+.error-icon-input {
+  position: absolute;
+  width: 16px;
+  top: 47px;
+  right: 25px;
+}
+
+.error-icon-birth-date {
+  width: 16px;
+  position: absolute;
+  right: 25px;
+  top: 14px;
+}
+
+.error-icon-roal {
+  position: absolute;
+  width: 16px;
+  top: 14px;
+  right: 25px;
+}
+
+/* Стили для плейсхолдера при ошибке */
+.modal-content-right-info-full-name-input.error::-moz-placeholder {
+  color: red;
+  /* Красный цвет текста */
+  opacity: 1;
+  /* Убедитесь, что текст не прозрачный */
+}
+.modal-content-right-info-full-name-input.error::placeholder {
+  color: red;
+  /* Красный цвет текста */
+  opacity: 1;
+  /* Убедитесь, что текст не прозрачный */
+}
+
+.birth__date.error::-moz-placeholder {
+  color: red;
+  /* Красный цвет текста */
+  opacity: 1;
+  /* Убедитесь, что текст не прозрачный */
+}
+
+.birth__date.error::placeholder {
+  color: red;
+  /* Красный цвет текста */
+  opacity: 1;
+  /* Убедитесь, что текст не прозрачный */
+}
+
+.modal {
+  display: flex;
+  position: absolute;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-conten-img {
+  width: 80px;
+}
+
+.modal-content-text {
+  color: rgb(66, 71, 77);
+  font-family: "Montserrat";
+  font-size: 14px;
+  font-weight: 500;
+  margin: 20px 0 0 0;
+}
+
+.modal-content-user {
+  color: rgb(66, 71, 77);
+  font-family: "Montserrat";
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.modal-content {
+  display: flex;
+  align-items: center;
+  background-color: white;
+  width: 383px;
+  height: 290px;
+  justify-content: center;
+  border-radius: 20px;
+  flex-direction: column;
+}
+
+.modal-content-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin: 30px 0 0 0;
+}
+
+.modal-content-box-button-left {
+  width: 156.5px;
+  height: 44px;
+  color: rgb(255, 255, 255);
+  font-family: "Montserrat";
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 16px;
+  background: rgb(255, 74, 51);
+}
+
+.modal-content-box-button-right {
+  width: 156.5px;
+  height: 44px;
+  color: rgb(230, 67, 46);
+  font-family: "Montserrat";
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  border-radius: 16px;
+  background: rgb(255, 233, 230);
 }/*# sourceMappingURL=App.css.map */
