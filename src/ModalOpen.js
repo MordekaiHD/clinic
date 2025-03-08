@@ -1,13 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
-const ModalOpen = ({ user, onSave, onClose }) => {
+const ModalOpen = ({ user, inputValue, onSave, onClose }) => {
   const isNewUser = !user || (!user.id && !user.last_name && !user.first_name);
+
+  const [isFocused, setIsFocused] = useState({
+    fullName: false,
+    birthDate: false,
+    role: false,
+  });
+
+  const handleFocus = (field) => {
+    setIsFocused(prevState => ({
+      ...prevState,
+      [field]: true,
+    }));
+  };
+
+  const handleBlur = (field) => {
+    setIsFocused(prevState => ({
+      ...prevState,
+      [field]: false,
+    }));
+  };
 
   const [formData, setFormData] = useState({
     id: user?.id || null,
-    fullName: user ? `${user.last_name} ${user.first_name}` : '',
+    fullName: user ? `${user.last_name} ${user.first_name}` : inputValue, // Используем inputValue для нового пользователя
     email: user?.email || '',
     gender: user?.gender || 'Male',
     birthDate: user?.birthDate ? new Date(user.birthDate) : null,
@@ -19,6 +39,15 @@ const ModalOpen = ({ user, onSave, onClose }) => {
     birthDate: false,
     role: false,
   });
+
+  useEffect(() => {
+    if (isNewUser && inputValue) {
+      setFormData(prevState => ({
+        ...prevState,
+        fullName: inputValue,
+      }));
+    }
+  }, [inputValue, isNewUser]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -85,8 +114,13 @@ const ModalOpen = ({ user, onSave, onClose }) => {
               name="fullName"
               value={formData.fullName}
               onChange={handleChange}
-              placeholder="Пользователь"
+              onFocus={() => handleFocus('fullName')}
+              onBlur={() => handleBlur('fullName')}
+              placeholder=" "
             />
+            <span className={`floating-placeholder-full-name ${isFocused.fullName || formData.fullName ? 'active' : ''}`}>
+              Пользователь
+            </span>
             {errors.fullName && <img className="error-icon-input" src="/Img/Danger.svg" alt="error" />}
           </div>
           <div className="modal-content-right-info-box">
@@ -105,11 +139,16 @@ const ModalOpen = ({ user, onSave, onClose }) => {
                     birthDate: !date,
                   }));
                 }}
+                onFocus={() => handleFocus('birthDate')}
+                onBlur={() => handleBlur('birthDate')}
                 dateFormat="dd.MM.yyyy"
-                placeholderText="Дата рождения"
+                placeholderText=" "
                 isClearable
                 className={`birth__date ${errors.birthDate ? 'error' : ''}`}
               />
+              <span className={`floating-placeholder-birth-date ${isFocused.birthDate || formData.birthDate ? 'active' : ''}`}>
+                Дата рождения
+              </span>
               {errors.birthDate && <img className="error-icon-birth-date" src="/Img/Danger.svg" alt="error" />}
             </div>
             <div className="gender-buttons">
@@ -129,13 +168,23 @@ const ModalOpen = ({ user, onSave, onClose }) => {
               </button>
             </div>
             <div className="role-select">
-              <select className={`roal ${errors.role ? 'error' : ''}`} name="role" value={formData.role} onChange={handleChange}>
-                <option value="">Роль</option>
+              <select
+                className={`roal ${errors.role ? 'error' : ''}`}
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                onFocus={() => handleFocus('role')}
+                onBlur={() => handleBlur('role')}
+              >
+                <option value=""> </option>
                 <option value="Доктор">Доктор</option>
                 <option value="Медбрат">Медбрат</option>
                 <option value="Медсестра">Медсестра</option>
                 <option value="Админ">Админ</option>
               </select>
+              <span className={`floating-placeholder-role ${isFocused.role || formData.role ? 'active' : ''}`}>
+                Роль
+              </span>
               {errors.role && <img className="error-icon-roal" src="/Img/Danger.svg" alt="error" />}
             </div>
           </div>
