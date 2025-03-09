@@ -27,7 +27,7 @@ const ModalOpen = ({ user, inputValue, onSave, onClose }) => {
 
   const [formData, setFormData] = useState({
     id: user?.id || null,
-    fullName: user ? `${user.last_name} ${user.first_name}` : inputValue, // Используем inputValue для нового пользователя
+    fullName: user ? `${user.last_name} ${user.first_name}` : inputValue, 
     email: user?.email || '',
     gender: user?.gender || 'Male',
     birthDate: user?.birthDate ? new Date(user.birthDate) : null,
